@@ -25,7 +25,7 @@ function App() {
   const [filters, setFilters] = useState<FilterState>({});
   const [filteredData, setFilteredData] = useState<any[]>([]);
   const [activeColumns, setActiveColumns] = useState<ColumnVisibility>({});
-  const [columnExamples, setColumnExamples] = useState<ColumnExamples>({});
+  const [columnOptions, setColumnOptions] = useState<ColumnExamples>({});
   const [hiddenFilters, setHiddenFilters] = useState<Set<string>>(new Set());
 
   const getUniqueValues = (data: any[], header: string): string[] => {
@@ -33,7 +33,7 @@ function App() {
       data.map(row => String(row[header]))
         .filter(value => value !== undefined && value !== null && value !== '')
     );
-    return Array.from(uniqueSet).slice(0, 3);
+    return Array.from(uniqueSet).sort();
   };
 
   const processExcelFile = async (file: File): Promise<any[]> => {
@@ -74,9 +74,24 @@ function App() {
       }
 
       const allHeaders = new Set<string>();
+      const allOptions: ColumnExamples = {};
+
       newDataArray.forEach(fileData => {
         fileData.data.forEach(row => {
-          Object.keys(row).forEach(header => allHeaders.add(header));
+          Object.keys(row).forEach(header => {
+            allHeaders.add(header);
+            if (!allOptions[header]) {
+              allOptions[header] = [];
+            }
+          });
+        });
+      });
+
+      // Coletar todas as opções únicas para cada coluna
+      newDataArray.forEach(fileData => {
+        Array.from(allHeaders).forEach(header => {
+          const headerOptions = getUniqueValues(fileData.data, header);
+          allOptions[header] = Array.from(new Set([...allOptions[header], ...headerOptions]));
         });
       });
 
@@ -86,23 +101,16 @@ function App() {
 
       const initialFilters: FilterState = {};
       const initialVisibility: ColumnVisibility = {};
-      const examples: ColumnExamples = {};
 
       headerArray.forEach(header => {
         initialFilters[header] = '';
         initialVisibility[header] = true;
-        const allExamples = new Set<string>();
-        newDataArray.forEach(fileData => {
-          const headerExamples = getUniqueValues(fileData.data, header);
-          headerExamples.forEach(example => allExamples.add(example));
-        });
-        examples[header] = Array.from(allExamples).slice(0, 3);
       });
 
       setAllData(newDataArray);
       setFilters(initialFilters);
       setActiveColumns(initialVisibility);
-      setColumnExamples(examples);
+      setColumnOptions(allOptions);
     } catch (error) {
       console.error('Erro ao processar arquivos:', error);
     }
@@ -140,7 +148,7 @@ function App() {
         return Object.entries(filters).every(([header, filterValue]) => {
           if (!activeColumns[header] || !filterValue) return true;
           const cellValue = String(row[header] || '').toLowerCase();
-          return cellValue.includes(filterValue.toLowerCase());
+          return cellValue === filterValue.toLowerCase();
         });
       }).map(row => ({
         ...row,
@@ -167,14 +175,14 @@ function App() {
   const visibleFilters = headers.filter(header => !hiddenFilters.has(header));
 
   const getPlaceholder = (header: string): string => {
-    const examples = columnExamples[header];
-    if (!examples || examples.length === 0) return `Filtrar por ${header}`;
+    const options = columnOptions[header] || [];
+    if (!options || options.length === 0) return `Selecione uma opção`;
     
-    if (examples.length === 1) {
-      return `Exemplo: ${examples[0]}`;
+    if (options.length === 1) {
+      return `Exemplo: ${options[0]}`;
     }
     
-    return `Exemplos: ${examples.join(', ')}...`;
+    return `Exemplos: ${options.slice(0, 3).join(', ')}...`;
   };
 
   return (
@@ -186,7 +194,7 @@ function App() {
             <div className="flex gap-4">
               <label className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-lg cursor-pointer flex items-center gap-2 transition-colors shadow-lg">
                 <Upload size={20} />
-                Carregar Planilhas
+                Carregar Planilhas (Máx. 10)
                 <input
                   type="file"
                   accept=".xlsx,.xls"
@@ -242,18 +250,23 @@ function App() {
                       </div>
                     </div>
                     <div className="relative">
-                      <input
-                        type="text"
+                      <select
                         value={filters[header]}
                         onChange={(e) => handleFilterChange(header, e.target.value)}
-                        className={`w-full px-4 py-2 bg-gray-800 border rounded-lg transition-colors ${
+                        className={`w-full px-4 py-2 bg-gray-800 border rounded-lg transition-colors appearance-none ${
                           activeColumns[header]
                             ? 'border-gray-600 focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-white'
                             : 'border-gray-700 bg-gray-800 text-gray-500'
                         }`}
-                        placeholder={getPlaceholder(header)}
                         disabled={!activeColumns[header]}
-                      />
+                      >
+                        <option value="">{getPlaceholder(header)}</option>
+                        {columnOptions[header]?.map((option) => (
+                          <option key={option} value={option}>
+                            {option}
+                          </option>
+                        ))}
+                      </select>
                       <Search 
                         className={`absolute right-3 top-1/2 transform -translate-y-1/2 ${
                           activeColumns[header] ? 'text-gray-400' : 'text-gray-600'
