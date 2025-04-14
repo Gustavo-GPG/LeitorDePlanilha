@@ -1,0 +1,111 @@
+.sobre-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 6rem 2rem 4rem;
+}
+
+.titulo-sobre {
+  text-align: center;
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: var(--accent);
+  margin-bottom: 3rem;
+  letter-spacing: -0.5px;
+}
+
+.main-content {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 2rem;
+  align-items: stretch; /* This ensures both columns stretch to match heights */
+}
+
+.sobre {
+  background-color: var(--secondary);
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  line-height: 1.8;
+  color: var(--text);
+  font-size: 1.1rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.3s ease;
+  height: 100%; /* Ensures the text container takes full height */
+}
+
+[data-theme="light"] .sobre {
+  background-color: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  color: #4a5568;
+}
+
+.image-container {
+  background-color: var(--secondary);
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.3s ease;
+  height: 100%; /* Ensures the image container takes full height */
+}
+
+[data-theme="light"] .image-container {
+  background-color: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.image-sobre {
+  width: 180px;
+  height: 180px;
+  object-fit: contain;
+  animation: spin-slow 20s linear infinite;
+  transition: transform 0.3s ease;
+}
+
+.image-sobre:hover {
+  transform: scale(1.05);
+}
+
+@keyframes spin-slow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .sobre-container {
+    padding: 5rem 1rem 3rem;
+  }
+
+  .titulo-sobre {
+    font-size: 2rem;
+    margin-bottom: 2rem;
+  }
+
+  .main-content {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  .sobre {
+    font-size: 1rem;
+    padding: 1.5rem;
+  }
+
+  .image-container {
+    padding: 1.5rem;
+    aspect-ratio: auto; /* Remove fixed aspect ratio on mobile */
+  }
+
+  .image-sobre {
+    width: 140px;
+    height: 140px;
+  }
+}
